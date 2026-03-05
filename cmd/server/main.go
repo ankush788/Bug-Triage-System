@@ -34,8 +34,8 @@ func main() {
 	}
 	defer deps.Close()
 
-	// Setup router
-	httpRouter := router.SetupRouter(
+	// Setup router --> return gin Engine pointer 
+	httpRouter := router.SetupRouter(  // httprouter = gin engine
 		deps.Handlers.AuthHandler,
 		deps.Handlers.BugHandler,
 		deps.Auth.JWTManager,
@@ -45,24 +45,31 @@ func main() {
 
 	log.Info("server starting", zap.String("port", cfg.Port))
 
-	// Start server in a goroutine
-	serverErrors := make(chan error, 1)
-	go func() {
-		if err := httpRouter.Run(":" + cfg.Port); err != nil {
-			serverErrors <- err
-		}
-	}()
+// Why not start the server normally (router.Run())?
+// 1) router.Run() blocks the main thread; running it in a goroutine keeps main free.
+// 2) log the actual reason of server stop ( user exist) or server start error
 
-	// Wait for interrupt signal
-	sigChan := make(chan os.Signal, 1)
-	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	select {
-	case <-sigChan:
-		log.Info("shutdown signal received")
-	case err := <-serverErrors:
-		log.Fatal("server error", zap.Error(err))
+serverErrors := make(chan error, 1)
+
+// Start HTTP server in background (remain main thread free to proces down things)
+go func() {
+	if err := httpRouter.Run(":" + cfg.Port); err != nil {
+		serverErrors <- err
 	}
+}()
 
-	log.Info("server stopped")
+// Listen for OS shutdown signals
+sigChan := make(chan os.Signal, 1)
+signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
+
+// Wait for either shutdown signal or server error (aslo log it)
+select {
+case <-sigChan:
+	log.Info("shutdown signal received")
+case err := <-serverErrors:
+	log.Fatal("server error", zap.Error(err))
+}
+
+log.Info("server stopped")
 }

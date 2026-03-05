@@ -20,11 +20,17 @@ func SetupRouter(
 ) *gin.Engine {
 	router := gin.Default()
 
-	// Health check (no auth required)
+	// Health check (no auth required) 
+	// (it is private api so, public will not access it) --> no threat of ddos attack
+	
 	router.GET("/health", authHandler.Health)
 
-	// Auth routes (no auth required)
-	authGroup := router.Group("/auth")
+// Auth routes (no auth required but rate limited)
+    authGroup := router.Group("/auth")
+    // apply rate limiter to slow down brute-force and signup abuse
+    authGroup.Use(
+        middleware.RateLimitMiddleware(rateLimiter, log),
+    )
 	{
 		authGroup.POST("/register", authHandler.Register)
 		authGroup.POST("/login", authHandler.Login)

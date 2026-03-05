@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"strconv"
 
 	"bug_triage/internal/pkg"
 
@@ -13,7 +14,7 @@ import (
 // Uses authenticated user ID if available, otherwise uses IP address
 func RateLimitMiddleware(limiter *pkg.RateLimiter, logger *zap.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		identifier := c.ClientIP()
+		identifier := c.ClientIP()  // use client ip_address if user_Id not present
 
 		// Use user ID as identifier if authenticated
 		if userID, ok := GetUserID(c); ok {
@@ -34,6 +35,6 @@ func RateLimitMiddleware(limiter *pkg.RateLimiter, logger *zap.Logger) gin.Handl
 }
 
 func userIDToString(userID int64) string {
-	// Simple conversion - in production might use a more sophisticated method
-	return "user:" + string(rune(userID))
+	return "user:" + strconv.FormatInt(userID, 10) // this convert the user_id to 10 base no. string
+												  // 45 --> "45"
 }
