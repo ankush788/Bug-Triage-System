@@ -1,0 +1,6 @@
+redis 
+open AI -> integrate 
+read about --> rate limiter , context (working)
+Load Balance 
+CD pipline 
+Testing

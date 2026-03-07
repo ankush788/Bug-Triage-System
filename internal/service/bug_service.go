@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"bug_triage/internal/dto"
 	"bug_triage/internal/kafka"
 	"bug_triage/internal/models"
 	"bug_triage/internal/repository"
@@ -30,14 +31,8 @@ func NewBugService(
 	}
 }
 
-// CreateBugRequest holds incoming bug creation data
-type CreateBugRequest struct {
-	Title       string `json:"title" binding:"required,min=5"`
-	Description string `json:"description" binding:"required,min=10"`
-}
-
 // CreateBug creates a new bug report and publishes event
-func (s *BugService) CreateBug(ctx context.Context, req *CreateBugRequest, reporterID int64) (*models.Bug, error) {
+func (s *BugService) CreateBug(ctx context.Context, req *dto.CreateBugRequest, reporterID int64) (*models.Bug, error) {
 	bug := &models.Bug{
 		Title:       req.Title,
 		Description: req.Description,

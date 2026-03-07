@@ -1,4 +1,4 @@
-package bootstrap
+package appdependency
 
 import (
 	"bug_triage/internal/auth"

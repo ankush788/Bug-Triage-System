@@ -41,6 +41,7 @@ func NewBugAnalyzer(
 
 // Start begins processing bug_created events
 func (ba *BugAnalyzer) Start(ctx context.Context) error {
+	
 	handler := func(ctx context.Context, message []byte) error {
 		event, err := kafka.ParseBugCreatedEvent(message)
 		if err != nil {

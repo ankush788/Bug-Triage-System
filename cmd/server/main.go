@@ -5,7 +5,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"bug_triage/internal/bootstrap"
+	"bug_triage/internal/appdependency"
 	"bug_triage/internal/config"
 	"bug_triage/internal/logger"
 	"bug_triage/internal/router"
@@ -28,7 +28,7 @@ func main() {
 	)
 
 	// Initialize all dependencies
-	deps, err := bootstrap.NewAppDependencies(cfg, log)
+	deps, err := appdependency.NewAppDependencies(cfg, log)
 	if err != nil {
 		log.Fatal("failed to initialize dependencies", zap.Error(err))
 	}

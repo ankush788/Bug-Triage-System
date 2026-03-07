@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 
+	"bug_triage/internal/dto"
 	"bug_triage/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -25,7 +26,7 @@ func NewAuthHandler(userService *service.UserService, logger *zap.Logger) *AuthH
 // Register handles user registration
 // POST /auth/register
 func (h *AuthHandler) Register(c *gin.Context) {
-	var req service.RegisterRequest
+	var req dto.RegisterRequest
 
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -45,7 +46,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 // Login handles user login
 // POST /auth/login
 func (h *AuthHandler) Login(c *gin.Context) {
-	var req service.LoginRequest
+	var req dto.LoginRequest
 
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

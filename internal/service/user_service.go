@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"bug_triage/internal/auth"
+	"bug_triage/internal/dto"
 	"bug_triage/internal/models"
 	"bug_triage/internal/repository"
 )
@@ -31,21 +32,8 @@ func NewUserService(
 	}
 }
 
-// RegisterRequest holds incoming registration data
-type RegisterRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,min=6"`
-}
-
-// RegisterResponse returns user info and auth token
-type RegisterResponse struct {
-	ID    int64  `json:"id"`
-	Email string `json:"email"`
-	Token string `json:"token"`
-}
-
 // Register creates a new user account
-func (s *UserService) Register(ctx context.Context, req *RegisterRequest) (*RegisterResponse, error) {
+func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) (*dto.RegisterResponse, error) {
 	// Check if user already exists
 	existing, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
@@ -77,28 +65,15 @@ func (s *UserService) Register(ctx context.Context, req *RegisterRequest) (*Regi
 		return nil, err
 	}
 
-	return &RegisterResponse{
+	return &dto.RegisterResponse{
 		ID:    user.ID,
 		Email: user.Email,
 		Token: token,
 	}, nil
 }
 
-// LoginRequest holds incoming login data
-type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
-}
-
-// LoginResponse returns user info and auth token
-type LoginResponse struct {
-	ID    int64  `json:"id"`
-	Email string `json:"email"`
-	Token string `json:"token"`
-}
-
 // Login authenticates a user and returns a token
-func (s *UserService) Login(ctx context.Context, req *LoginRequest) (*LoginResponse, error) {
+func (s *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.LoginResponse, error) {
 	// Get user by email
 	user, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
@@ -119,7 +94,7 @@ func (s *UserService) Login(ctx context.Context, req *LoginRequest) (*LoginRespo
 		return nil, err
 	}
 
-	return &LoginResponse{
+	return &dto.LoginResponse{
 		ID:    user.ID,
 		Email: user.Email,
 		Token: token,

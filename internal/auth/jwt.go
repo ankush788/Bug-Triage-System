@@ -34,8 +34,13 @@ func (m *JWTManager) GenerateToken(userID int64, email string, expiresIn time.Du
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	signedToken, err := token.SignedString([]byte(m.secretKey))
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims) 
+    // it give json { header , claims , Method}
+	// Header → { "typ": "JWT", "alg": "HS256" }  (HS256 --> signature algorithm)
+	// Claims → payload (userID, email, exp, iat)
+	// Method → interface name in which signature function is implemneted
+	
+	signedToken, err := token.SignedString([]byte(m.secretKey)) //base64(header) . base64(payload) . signature
 	if err != nil {
 		return "", err
 	}
@@ -44,6 +49,17 @@ func (m *JWTManager) GenerateToken(userID int64, email string, expiresIn time.Du
 }
 
 // ValidateToken parses and validates a JWT token
+
+//JWT token
+//    ↓
+// Parse
+//    ↓
+// Verify signature with secret
+// break token(header.payload.signature) in three part --> check  HMAC-SHA256(secretKey, header.payload) == token_signature
+//    ↓
+// Check expiration
+//    ↓
+// Return user claims
 func (m *JWTManager) ValidateToken(tokenString string) (*Claims, error) {
 	claims := &Claims{}
 	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {

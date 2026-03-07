@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"bug_triage/internal/dto"
 	"bug_triage/internal/middleware"
 	"bug_triage/internal/service"
 
@@ -34,7 +35,7 @@ func (h *BugHandler) CreateBug(c *gin.Context) {
 		return
 	}
 
-	var req service.CreateBugRequest
+	var req dto.CreateBugRequest
 
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -99,28 +100,40 @@ func (h *BugHandler) ListBugs(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"bugs":   bugs,
-		"limit":  limit,
-		"offset": offset,
-	})
-}
+	// Convert models.Bug to dto.BugResponse
+	bugResponses := make([]dto.BugResponse, len(bugs))
+	for i, bug := range bugs {
+		bugResponses[i] = dto.BugResponse{
+			ID:          bug.ID,
+			Title:       bug.Title,
+			Description: bug.Description,
+			Status:      bug.Status,
+			Priority:    bug.Priority,
+			Category:    bug.Category,
+			ReporterID:  bug.ReporterID,
+			CreatedAt:   bug.CreatedAt.Format("2006-01-02T15:04:05Z"),
+		}
+	}
 
-// UpdateBugStatusRequest holds status update data
-type UpdateBugStatusRequest struct {
-	Status string `json:"status" binding:"required"`
+	response := dto.BugsListResponse{
+		Bugs:   bugResponses,
+		Limit:  limit,
+		Offset: offset,
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // UpdateBugStatus updates a bug's status
 // PATCH /bugs/:id/status
 func (h *BugHandler) UpdateBugStatus(c *gin.Context) {
-	bugID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	bugID, err := strconv.ParseInt(c.Param("id"), 10, 64) // string, base (10 as base) , bit(64 bit)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid bug id"})
 		return
 	}
 
-	var req UpdateBugStatusRequest
+	var req dto.UpdateBugStatusRequest
 
 	if err := c.BindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
