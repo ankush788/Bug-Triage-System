@@ -1,12 +1,16 @@
 package models
 
-import "time"
+import (
+	"time"
+
+	"gorm.io/gorm"
+)
 
 // User represents a registered user in the system.
-
 type User struct {
-    ID           int64     `db:"id" json:"id"`
-    Email        string    `db:"email" json:"email"`
-    PasswordHash string    `db:"password_hash" json:"-"`
-    CreatedAt    time.Time `db:"created_at" json:"created_at"`
+	ID           int64          `gorm:"column:id;primaryKey;autoIncrement" json:"id"`
+	Email        string         `gorm:"column:email;unique;not null" json:"email"`
+	PasswordHash string         `gorm:"column:password_hash;not null" json:"-"`
+	CreatedAt    time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
+	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
 }

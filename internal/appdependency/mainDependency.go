@@ -11,14 +11,14 @@ import (
 	"bug_triage/internal/repository"
 	"bug_triage/internal/service"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // AppDependencies holds all initialized application dependencies
 type AppDependencies struct {
-	DB           *sqlx.DB
+	DB           *gorm.DB
 	Redis        *redis.Client
 	Kafka        *KafkaDependencies
 	Repositories *RepositoryDependencies
@@ -125,7 +125,8 @@ func NewAppDependencies(cfg *config.Config, log *zap.Logger) (*AppDependencies, 
 // Close closes all closeable dependencies
 func (d *AppDependencies) Close() error {
 	if d.DB != nil {
-		d.DB.Close()
+		sqlDB, _ := d.DB.DB()
+		sqlDB.Close()
 	}
 	if d.Redis != nil {
 		d.Redis.Close()

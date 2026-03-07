@@ -7,18 +7,18 @@ import (
 	"bug_triage/internal/repository"
 	"bug_triage/internal/worker"
 
-	"github.com/jmoiron/sqlx"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // WorkerDependencies holds dependencies required for the worker service
 type WorkerDependencies struct {
-	DB           *sqlx.DB
-	BugRepo      repository.BugRepository
+	DB            *gorm.DB
+	BugRepo       repository.BugRepository
 	KafkaProducer *kafka.Producer
 	KafkaConsumer *kafka.Consumer
-	AIAnalyzer   *worker.SimpleAIAnalyzer
-	Logger       *zap.Logger
+	AIAnalyzer    *worker.SimpleAIAnalyzer
+	Logger        *zap.Logger
 }
 
 // NewWorkerDependencies initializes dependencies required for the worker
@@ -57,7 +57,8 @@ func NewWorkerDependencies(cfg *config.Config, log *zap.Logger) (*WorkerDependen
 // Close closes all closeable worker dependencies
 func (d *WorkerDependencies) Close() error {
 	if d.DB != nil {
-		d.DB.Close()
+		sqlDB, _ := d.DB.DB()
+		sqlDB.Close()
 	}
 	if d.KafkaProducer != nil {
 		d.KafkaProducer.Close()
