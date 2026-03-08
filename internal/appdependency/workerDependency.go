@@ -1,12 +1,11 @@
 package appdependency
 
 import (
+	"bug_triage/internal/aianalyzer"
 	"bug_triage/internal/config"
 	"bug_triage/internal/database"
 	"bug_triage/internal/kafka"
 	"bug_triage/internal/repository"
-	"bug_triage/internal/worker"
-
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -17,7 +16,7 @@ type WorkerDependencies struct {
 	BugRepo       repository.BugRepository
 	KafkaProducer *kafka.Producer
 	KafkaConsumer *kafka.Consumer
-	AIAnalyzer    *worker.SimpleAIAnalyzer
+	AIAnalyzer    *aianalyzer.SimpleAIAnalyzer
 	Logger        *zap.Logger
 }
 
@@ -33,8 +32,8 @@ func NewWorkerDependencies(cfg *config.Config, log *zap.Logger) (*WorkerDependen
 	bugRepo := repository.NewPostgresBugRepo(db)
 
 	// Initialize Kafka producer and consumer
-	kafkaProducer := kafka.NewProducerWithBrokers([]string{cfg.KafkaBroker}, log)
-	kafkaConsumer := kafka.NewConsumerWithBrokers(
+	kafkaProducer := kafka.NewProducer([]string{cfg.KafkaBroker}, log)
+	kafkaConsumer := kafka.NewConsumer(
 		[]string{cfg.KafkaBroker},
 		kafka.EventBugCreated,
 		"bug-analyzer-worker-group",
@@ -42,7 +41,7 @@ func NewWorkerDependencies(cfg *config.Config, log *zap.Logger) (*WorkerDependen
 	)
 
 	// Initialize AI analyzer
-	aiAnalyzer := worker.NewSimpleAIAnalyzer(log)
+	aiAnalyzer := aianalyzer.NewSimpleAIAnalyzer(log)
 
 	return &WorkerDependencies{
 		DB:            db,

@@ -7,35 +7,31 @@ import (
 	"go.uber.org/zap"
 )
 
-// Producer publishes events to Kafka topics
 type Producer struct {
-	writers map[string]*kafka.Writer
-	logger  *zap.Logger
+	writerBugCreated  *kafka.Writer
+	writerBugAnalyzed *kafka.Writer
+	logger            *zap.Logger
 }
 
 func NewProducer(brokers []string, logger *zap.Logger) *Producer {
-	return &Producer{
-		writers: make(map[string]*kafka.Writer),
-		logger:  logger,
-	}
-}
 
-// getWriter returns (or creates) a writer for a topic
-func (p *Producer) getWriter(topic string) *kafka.Writer {
-	if w, exists := p.writers[topic]; exists {
-		return w
-	}
-
-	w := kafka.NewWriter(kafka.WriterConfig{
-		Brokers: []string{"localhost:9092"}, // Would be parameterized
-		Topic:   topic,
+	writerBugCreated := kafka.NewWriter(kafka.WriterConfig{
+		Brokers: brokers,
+		Topic:   EventBugCreated,
 	})
 
-	p.writers[topic] = w
-	return w
+	writerBugAnalyzed := kafka.NewWriter(kafka.WriterConfig{
+		Brokers: brokers,
+		Topic:   EventBugAnalyzed,
+	})
+
+	return &Producer{
+		writerBugCreated:  writerBugCreated,
+		writerBugAnalyzed: writerBugAnalyzed,
+		logger:            logger,
+	}
 }
 
-// PublishBugCreatedEvent publishes a bug created event
 func (p *Producer) PublishBugCreatedEvent(ctx context.Context, event *BugCreatedEvent) error {
 	data, err := event.ToJSON()
 	if err != nil {
@@ -43,8 +39,7 @@ func (p *Producer) PublishBugCreatedEvent(ctx context.Context, event *BugCreated
 		return err
 	}
 
-	w := p.getWriter(EventBugCreated)
-	err = w.WriteMessages(ctx, kafka.Message{
+	err = p.writerBugCreated.WriteMessages(ctx, kafka.Message{
 		Value: data,
 	})
 
@@ -57,7 +52,6 @@ func (p *Producer) PublishBugCreatedEvent(ctx context.Context, event *BugCreated
 	return nil
 }
 
-// PublishBugAnalyzedEvent publishes a bug analyzed event
 func (p *Producer) PublishBugAnalyzedEvent(ctx context.Context, event *BugAnalyzedEvent) error {
 	data, err := event.ToJSON()
 	if err != nil {
@@ -65,8 +59,7 @@ func (p *Producer) PublishBugAnalyzedEvent(ctx context.Context, event *BugAnalyz
 		return err
 	}
 
-	w := p.getWriter(EventBugAnalyzed)
-	err = w.WriteMessages(ctx, kafka.Message{
+	err = p.writerBugAnalyzed.WriteMessages(ctx, kafka.Message{
 		Value: data,
 	})
 
@@ -79,13 +72,15 @@ func (p *Producer) PublishBugAnalyzedEvent(ctx context.Context, event *BugAnalyz
 	return nil
 }
 
-// Close closes all writers
 func (p *Producer) Close() error {
-	for _, w := range p.writers {
-		if err := w.Close(); err != nil {
-			p.logger.Error("failed to close writer", zap.Error(err))
-			return err
-		}
+
+	if err := p.writerBugCreated.Close(); err != nil {
+		return err
 	}
+
+	if err := p.writerBugAnalyzed.Close(); err != nil {
+		return err
+	}
+
 	return nil
 }

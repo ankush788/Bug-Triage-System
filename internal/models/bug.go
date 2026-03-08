@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // Bug represents a submitted bug report.
@@ -16,5 +14,4 @@ type Bug struct {
 	Priority    string         `gorm:"column:priority;not null" json:"priority"`
 	Category    string         `gorm:"column:category;not null" json:"category"`
 	CreatedAt   time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
-	DeletedAt   gorm.DeletedAt `gorm:"index" json:"-"`
 }

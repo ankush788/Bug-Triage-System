@@ -2,8 +2,6 @@ package models
 
 import (
 	"time"
-
-	"gorm.io/gorm"
 )
 
 // User represents a registered user in the system.
@@ -12,5 +10,5 @@ type User struct {
 	Email        string         `gorm:"column:email;unique;not null" json:"email"`
 	PasswordHash string         `gorm:"column:password_hash;not null" json:"-"`
 	CreatedAt    time.Time      `gorm:"column:created_at;autoCreateTime" json:"created_at"`
-	DeletedAt    gorm.DeletedAt `gorm:"index" json:"-"`
+
 }

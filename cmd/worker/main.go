@@ -9,6 +9,7 @@ import (
 	"bug_triage/internal/appdependency"
 	"bug_triage/internal/config"
 	"bug_triage/internal/logger"
+	"bug_triage/internal/migration"
 	"bug_triage/internal/worker"
 
 	"go.uber.org/zap"
@@ -35,6 +36,11 @@ func main() {
 	// Load configuration
 	cfg := config.Load()
 	log.Info("bug analyzer worker starting")
+
+	// run migrations before starting worker (worker also interacts with database)
+	if err := migration.Run(cfg.DBUrl, log); err != nil {
+		log.Fatal("database migration failed", zap.Error(err))
+	}
 
 	// Initialize all worker dependencies
 	deps, err := appdependency.NewWorkerDependencies(cfg, log)

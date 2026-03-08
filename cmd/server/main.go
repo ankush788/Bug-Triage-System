@@ -8,6 +8,7 @@ import (
 	"bug_triage/internal/appdependency"
 	"bug_triage/internal/config"
 	"bug_triage/internal/logger"
+	"bug_triage/internal/migration"
 	"bug_triage/internal/router"
 
 	"go.uber.org/zap"
@@ -26,6 +27,13 @@ func main() {
 		zap.String("port", cfg.Port),
 		zap.String("db_url", cfg.DBUrl),
 	)
+
+	// Run database migrations before initializing other dependencies.
+	// This ensures the schema is up-to-date before the application starts
+	// performing any operations.
+	if err := migration.Run(cfg.DBUrl, log); err != nil {
+		log.Fatal("database migration failed", zap.Error(err))
+	}
 
 	// Initialize all dependencies
 	deps, err := appdependency.NewAppDependencies(cfg, log)

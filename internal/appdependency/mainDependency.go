@@ -74,7 +74,7 @@ func NewAppDependencies(cfg *config.Config, log *zap.Logger) (*AppDependencies, 
 	}
 
 	// Initialize Kafka
-	kafkaProducer := kafka.NewProducerWithBrokers([]string{cfg.KafkaBroker}, log)
+	kafkaProducer := kafka.NewProducer([]string{cfg.KafkaBroker}, log)
 
 	// Initialize repositories
 	userRepo := repository.NewPostgresUserRepo(db)
