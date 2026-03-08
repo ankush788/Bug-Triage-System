@@ -73,6 +73,9 @@ func NewAppDependencies(cfg *config.Config, log *zap.Logger) (*AppDependencies, 
 		return nil, err
 	}
 
+	// Initialize bug cache
+	bugCache := cache.NewBugCache(redisClient)
+
 	// Initialize Kafka
 	kafkaProducer := kafka.NewProducer([]string{cfg.KafkaBroker}, log)
 
@@ -86,7 +89,7 @@ func NewAppDependencies(cfg *config.Config, log *zap.Logger) (*AppDependencies, 
 
 	// Initialize services
 	userService := service.NewUserService(userRepo, passwordManager, jwtManager)
-	bugService := service.NewBugService(bugRepo, kafkaProducer, log)
+	bugService := service.NewBugService(bugRepo, kafkaProducer, log, bugCache)
 
 	// Initialize rate limiter
 	rateLimiter := pkg.NewRateLimiter(redisClient, log)

@@ -31,8 +31,8 @@ func NewRateLimiter(client *redis.Client, logger *zap.Logger) *RateLimiter {
     return &RateLimiter{
         client:      client,
         logger:      logger,
-        maxTokens:   100,  // maximum tokens in bucket (burst capacity)
-        refillRate:  10,   // tokens added per second
+        maxTokens:   1,  // maximum tokens in bucket (burst capacity)
+        refillRate:  0,   // tokens added per second
         requestCost: 1,    // tokens consumed per request
     }
 }

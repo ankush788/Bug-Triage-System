@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	"bug_triage/internal/cache"
 	"bug_triage/internal/dto"
 	"bug_triage/internal/kafka"
 	"bug_triage/internal/models"
@@ -17,19 +18,25 @@ type BugService struct {
 	bugRepo  repository.BugRepository
 	producer *kafka.Producer
 	logger   *zap.Logger
+	bugCache *cache.BugCache
 }
 
 func NewBugService(
 	bugRepo repository.BugRepository,
 	producer *kafka.Producer,
 	logger *zap.Logger,
+	bugCache *cache.BugCache,
 ) *BugService {
 	return &BugService{
 		bugRepo:  bugRepo,
 		producer: producer,
 		logger:   logger,
+		bugCache: bugCache,
 	}
 }
+
+// didn't use redis in ListBUg :-
+// frequent write/update option make redis overhead beside of reducing latancy
 
 // CreateBug creates a new bug report and publishes event
 func (s *BugService) CreateBug(ctx context.Context, req *dto.CreateBugRequest, reporterID int64) (*models.Bug, error) {
@@ -50,6 +57,11 @@ func (s *BugService) CreateBug(ctx context.Context, req *dto.CreateBugRequest, r
 
 	s.logger.Info("bug created", zap.Int64("bug_id", bug.ID))
 
+	// Cache the bug
+	if err := s.bugCache.Set(ctx, bug.ID, bug); err != nil {
+		s.logger.Warn("failed to cache bug", zap.Error(err))
+	}
+
 	// Publish event for processing
 	event := &kafka.BugCreatedEvent{
 		BugID:       bug.ID,
@@ -68,7 +80,15 @@ func (s *BugService) CreateBug(ctx context.Context, req *dto.CreateBugRequest, r
 
 // GetBug retrieves a bug by ID
 func (s *BugService) GetBug(ctx context.Context, bugID int64) (*models.Bug, error) {
-	bug, err := s.bugRepo.GetByID(ctx, bugID)
+	// Try to get from cache
+	bug, err := s.bugCache.Get(ctx, bugID)
+	if err == nil {
+		s.logger.Debug("bug retrieved from cache", zap.Int64("bug_id", bugID))
+		return bug, nil
+	}
+
+	// Get from database
+	bug, err = s.bugRepo.GetByID(ctx, bugID)
 	if err != nil {
 		s.logger.Error("failed to get bug", zap.Error(err))
 		return nil, err
@@ -76,6 +96,12 @@ func (s *BugService) GetBug(ctx context.Context, bugID int64) (*models.Bug, erro
 	if bug == nil {
 		return nil, errors.New("bug not found")
 	}
+
+	// Cache the result
+	if err := s.bugCache.Set(ctx, bug.ID, bug); err != nil {
+		s.logger.Warn("failed to cache bug", zap.Error(err))
+	}
+
 	return bug, nil
 }
 
@@ -113,6 +139,11 @@ func (s *BugService) UpdateBugStatus(ctx context.Context, bugID int64, status st
 	if err := s.bugRepo.UpdateStatus(ctx, bugID, status); err != nil {
 		s.logger.Error("failed to update bug status", zap.Error(err))
 		return err
+	}
+
+	// Invalidate cache
+	if err := s.bugCache.Delete(ctx, bugID); err != nil {
+		s.logger.Warn("failed to invalidate cache", zap.Error(err))
 	}
 
 	s.logger.Info("bug status updated",
