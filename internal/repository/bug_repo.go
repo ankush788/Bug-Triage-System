@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 
+	errortype "bug_triage/internal/err"
 	"bug_triage/internal/models"
 
 	"gorm.io/gorm"
@@ -14,6 +15,12 @@ import (
 // we create different repo structure/files for different domain (bug , user) because their storing data or
 //acessing db pattern may  be differnet domain to domain
 
+// BugRepository defines  operations/behaviour for bugs.
+//
+// we create different repo structure/files for different domain (bug , user) because their storing data or
+//acessing db pattern may  be differnet domain to domain
+//
+// methods that look up a single entity return ErrNotFound when the row does not exist.
 type BugRepository interface {
     Create(ctx context.Context, b *models.Bug) error
     GetByID(ctx context.Context, id int64) (*models.Bug, error)
@@ -40,7 +47,7 @@ func (r *PostgresBugRepo) GetByID(ctx context.Context, id int64) (*models.Bug, e
 	var b models.Bug
 	err := r.db.WithContext(ctx).First(&b, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+		return nil, errortype.ErrNotFound
 	}
 	return &b, err
 }
@@ -52,12 +59,26 @@ func (r *PostgresBugRepo) List(ctx context.Context, limit, offset int) ([]*model
 }
 
 func (r *PostgresBugRepo) UpdateStatus(ctx context.Context, id int64, status string) error {
-	return r.db.WithContext(ctx).Model(&models.Bug{}).Where("id = ?", id).Update("status", status).Error
+	res := r.db.WithContext(ctx).Model(&models.Bug{}).Where("id = ?", id).Update("status", status)
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return errortype.ErrNotFound
+	}
+	return nil
 }
 
 func (r *PostgresBugRepo) UpdateAnalysis(ctx context.Context, id int64, priority, category string) error {
-	return r.db.WithContext(ctx).Model(&models.Bug{}).Where("id = ?", id).Updates(map[string]interface{}{
+	res := r.db.WithContext(ctx).Model(&models.Bug{}).Where("id = ?", id).Updates(map[string]interface{}{
 		"priority": priority,
 		"category": category,
-	}).Error
+	})
+	if res.Error != nil {
+		return res.Error
+	}
+	if res.RowsAffected == 0 {
+		return errortype.ErrNotFound
+	}
+	return nil
 }

@@ -7,6 +7,7 @@ import (
 
 	"bug_triage/internal/auth"
 	"bug_triage/internal/dto"
+	errortype "bug_triage/internal/err"
 	"bug_triage/internal/models"
 	"bug_triage/internal/repository"
 )
@@ -37,7 +38,11 @@ func (s *UserService) Register(ctx context.Context, req *dto.RegisterRequest) (*
 	// Check if user already exists
 	existing, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
-		return nil, err
+		if errors.Is(err, errortype.ErrNotFound) {
+			// no existing user, continue
+		} else {
+			return nil, err
+		}
 	}
 	if existing != nil {
 		return nil, errors.New("user already exists")
@@ -77,10 +82,10 @@ func (s *UserService) Login(ctx context.Context, req *dto.LoginRequest) (*dto.Lo
 	// Get user by email
 	user, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
+		if errors.Is(err, errortype.ErrNotFound) {
+			return nil, errors.New("invalid email or password")
+		}
 		return nil, err
-	}
-	if user == nil {
-		return nil, errors.New("invalid email or password")
 	}
 
 	// Verify password

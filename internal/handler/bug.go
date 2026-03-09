@@ -6,6 +6,7 @@ import (
 	"strconv"
 
 	"bug_triage/internal/dto"
+	errortype "bug_triage/internal/err"
 	"bug_triage/internal/middleware"
 	"bug_triage/internal/service"
 
@@ -63,7 +64,7 @@ func (h *BugHandler) GetBug(c *gin.Context) {
 
 	bug, err := h.bugService.GetBug(c.Request.Context(), bugID)
 	if err != nil {
-		if errors.Is(err, errors.New("bug not found")) {
+		if errors.Is(err, errortype.ErrBugNotFound) {
 			c.JSON(http.StatusNotFound, gin.H{"error": "bug not found"})
 			return
 		}
@@ -140,7 +141,12 @@ func (h *BugHandler) UpdateBugStatus(c *gin.Context) {
 		return
 	}
 
-	if err := h.bugService.UpdateBugStatus(c.Request.Context(), bugID, req.Status); err != nil {
+	err = h.bugService.UpdateBugStatus(c.Request.Context(), bugID, req.Status)
+	if err != nil {
+		if errors.Is(err, errortype.ErrBugNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "bug not found"})
+			return
+		}
 		h.logger.Error("failed to update bug status", zap.Error(err))
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return

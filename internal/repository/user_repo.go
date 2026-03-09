@@ -4,13 +4,15 @@ import (
 	"context"
 	"errors"
 
+	errortype "bug_triage/internal/err"
 	"bug_triage/internal/models"
 
 	"gorm.io/gorm"
 )
 
 // UserRepository defines methods for working with user persistence.
-
+//
+// like the bug repository, lookups return ErrNotFound when there is no matching row.
 // we create different repo structure/files for different domain (bug , user) because their storing data or
 //acessing db pattern may  be differnet domain to domain
 
@@ -37,7 +39,7 @@ func (r *PostgresUserRepo) GetByEmail(ctx context.Context, email string) (*model
 	var u models.User
 	err := r.db.WithContext(ctx).Where("email = ?", email).First(&u).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+		return nil, errortype.ErrNotFound
 	}
 	return &u, err
 }
@@ -46,7 +48,7 @@ func (r *PostgresUserRepo) GetByID(ctx context.Context, id int64) (*models.User,
 	var u models.User
 	err := r.db.WithContext(ctx).First(&u, id).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, nil
+		return nil, errortype.ErrNotFound
 	}
 	return &u, err
 }

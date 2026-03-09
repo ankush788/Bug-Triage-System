@@ -6,6 +6,7 @@ import (
 
 	"bug_triage/internal/cache"
 	"bug_triage/internal/dto"
+	errortype "bug_triage/internal/err"
 	"bug_triage/internal/kafka"
 	"bug_triage/internal/models"
 	"bug_triage/internal/repository"
@@ -91,11 +92,11 @@ func (s *BugService) GetBug(ctx context.Context, bugID int64) (*models.Bug, erro
 	// Get from database
 	bug, err = s.bugRepo.GetByID(ctx, bugID)
 	if err != nil {
+		if errors.Is(err, errortype.ErrNotFound) {
+			return nil, errortype.ErrBugNotFound
+		}
 		s.logger.Error("failed to get bug", zap.Error(err))
 		return nil, err
-	}
-	if bug == nil {
-		return nil, errors.New("bug not found")
 	}
 
 	// Cache the result
@@ -137,7 +138,11 @@ func (s *BugService) UpdateBugStatus(ctx context.Context, bugID int64, status st
 		return errors.New("invalid status")
 	}
 
-	if err := s.bugRepo.UpdateStatus(ctx, bugID, status); err != nil {
+	err := s.bugRepo.UpdateStatus(ctx, bugID, status)
+	if err != nil {
+		if errors.Is(err, errortype.ErrNotFound) {
+			return errortype.ErrBugNotFound
+		}
 		s.logger.Error("failed to update bug status", zap.Error(err))
 		return err
 	}

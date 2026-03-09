@@ -2,7 +2,9 @@ package worker
 
 import (
 	"context"
+	"errors"
 
+	errortype "bug_triage/internal/err"
 	"bug_triage/internal/kafka"
 	"bug_triage/internal/repository"
 
@@ -64,6 +66,11 @@ func (ba *BugAnalyzer) Start(ctx context.Context) error {
 
 		// Update bug with analysis results
 		if err := ba.bugRepo.UpdateAnalysis(ctx, event.BugID, priority, category); err != nil {
+			if errors.Is(err, errortype.ErrNotFound) {
+				ba.logger.Warn("bug disappeared before analysis", zap.Int64("bug_id", event.BugID))
+				// not a fatal error, just swallow it
+				return nil
+			}
 			ba.logger.Error("failed to update bug analysis", zap.Error(err))
 			return err
 		}
