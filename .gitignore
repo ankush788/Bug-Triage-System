@@ -19,6 +19,9 @@ vendor/
 # Go workspace file
 go.work
 
+# Air temporary build directory
+tmp/
+
 # IDE specific files
 .vscode/
 .idea/

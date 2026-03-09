@@ -40,6 +40,7 @@ func NewBugService(
 
 // CreateBug creates a new bug report and publishes event
 func (s *BugService) CreateBug(ctx context.Context, req *dto.CreateBugRequest, reporterID int64) (*models.Bug, error) {
+	
 	bug := &models.Bug{
 		Title:       req.Title,
 		Description: req.Description,

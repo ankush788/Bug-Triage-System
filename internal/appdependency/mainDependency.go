@@ -92,7 +92,7 @@ func NewAppDependencies(cfg *config.Config, log *zap.Logger) (*AppDependencies, 
 	bugService := service.NewBugService(bugRepo, kafkaProducer, log, bugCache)
 
 	// Initialize rate limiter
-	rateLimiter := pkg.NewRateLimiter(redisClient, log)
+	rateLimiter := pkg.NewRateLimiter(log)
 
 	// Initialize handlers
 	authHandler := handler.NewAuthHandler(userService, log)

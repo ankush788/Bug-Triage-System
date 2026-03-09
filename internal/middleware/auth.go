@@ -12,7 +12,9 @@ import (
 
 // JWTMiddleware validates JWT tokens from Authorization header
 func JWTMiddleware(jwtManager *auth.JWTManager, logger *zap.Logger) gin.HandlerFunc {
+	
 	return func(c *gin.Context) {
+		// logger.Debug("this is auth middleware")
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization header"})

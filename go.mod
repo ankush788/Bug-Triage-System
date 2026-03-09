@@ -11,6 +11,7 @@ require (
 	github.com/segmentio/kafka-go v0.4.42
 	go.uber.org/zap v1.26.0
 	golang.org/x/crypto v0.45.0
+	golang.org/x/time v0.14.0
 	gorm.io/driver/postgres v1.6.0
 	gorm.io/gorm v1.31.1
 )
