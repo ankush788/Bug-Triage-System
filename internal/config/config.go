@@ -18,6 +18,7 @@ type Config struct {
     JWTSecret      string
     KafkaBroker    string
     RedisAddr      string
+    RedisDB        int
     RedisPassword  string
     SMTPHost       string
     SMTPPort       int
@@ -44,12 +45,18 @@ func Load() *Config {
         smtpPort = 587
     }
 
+    redisDB, err := strconv.Atoi(os.Getenv("REDIS_DB"))
+    if err != nil {
+        redisDB = 0
+    }
+
     cfg := &Config{
         Port:          port,
         DBUrl:         os.Getenv("DATABASE_URL"),
         JWTSecret:     os.Getenv("JWT_SECRET"),
         KafkaBroker:   os.Getenv("KAFKA_BROKER"),
         RedisAddr:     os.Getenv("REDIS_ADDR"),
+        RedisDB:       redisDB,
         RedisPassword: os.Getenv("REDIS_PASSWORD"),
         SMTPHost:      os.Getenv("SMTP_HOST"),
         SMTPPort:      smtpPort,

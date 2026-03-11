@@ -8,10 +8,11 @@ import (
 )
 
 // NewRedisClient initializes and returns a Redis client
-func NewRedisClient(addr, password string, log *zap.Logger) (*redis.Client, error) {
+func NewRedisClient(addr, password string, RedisDB int,  log *zap.Logger) (*redis.Client, error) {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     addr,
 		Password: password,
+		DB : RedisDB,
 	})
 
 	// Test connection

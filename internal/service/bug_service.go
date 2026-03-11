@@ -89,6 +89,7 @@ func (s *BugService) GetBug(ctx context.Context, bugID int64) (*models.Bug, erro
 		return bug, nil
 	}
 
+
 	// Get from database
 	bug, err = s.bugRepo.GetByID(ctx, bugID)
 	if err != nil {
@@ -159,3 +160,9 @@ func (s *BugService) UpdateBugStatus(ctx context.Context, bugID int64, status st
 
 	return nil
 }
+
+
+//--- this is useful
+// 	/if err := s.bugCache.ClearAll(ctx); err != nil {
+// 	s.logger.Warn("failed to clear cache", zap.Error(err))
+// }

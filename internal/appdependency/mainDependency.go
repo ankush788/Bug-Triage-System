@@ -68,7 +68,7 @@ func NewAppDependencies(cfg *config.Config, log *zap.Logger) (*AppDependencies, 
 	}
 
 	// Initialize Redis
-	redisClient, err := cache.NewRedisClient(cfg.RedisAddr, cfg.RedisPassword, log)
+	redisClient, err := cache.NewRedisClient(cfg.RedisAddr, cfg.RedisPassword, cfg.RedisDB , log)
 	if err != nil {
 		return nil, err
 	}
