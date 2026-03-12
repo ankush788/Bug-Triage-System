@@ -1,2 +1,5 @@
-CD pipline 
-Gen AI api intergrate 
+RAG (working)
+docker (basic)
+context (basic work)
+migration (wokring)
+performance testing & test

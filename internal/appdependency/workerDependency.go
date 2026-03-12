@@ -16,7 +16,7 @@ type WorkerDependencies struct {
 	BugRepo       repository.BugRepository
 	KafkaProducer *kafka.Producer
 	KafkaConsumer *kafka.Consumer
-	AIAnalyzer    *aianalyzer.SimpleAIAnalyzer
+	AIAnalyzer    *aianalyzer.GeminiAnalyzer
 	Logger        *zap.Logger
 }
 
@@ -41,7 +41,10 @@ func NewWorkerDependencies(cfg *config.Config, log *zap.Logger) (*WorkerDependen
 	)
 
 	// Initialize AI analyzer
-	aiAnalyzer := aianalyzer.NewSimpleAIAnalyzer(log)
+	aiAnalyzer ,err  := aianalyzer.NewGeminiAnalyzer(log)
+	if err != nil {
+		 return nil , err
+	}
 
 	return &WorkerDependencies{
 		DB:            db,

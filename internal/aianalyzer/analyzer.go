@@ -2,64 +2,114 @@ package aianalyzer
 
 import (
 	"context"
-	"math/rand"
+	"encoding/json"
+	"errors"
+	"fmt"
+	"os"
 	"strings"
+	"time"
+
+	"github.com/google/generative-ai-go/genai"
 	"go.uber.org/zap"
+	"google.golang.org/api/option"
 )
 
-// SimpleAIAnalyzer performs basic heuristic-based bug classification
-// In production, this would call OpenAI or Gemini API
-type SimpleAIAnalyzer struct {
+type GeminiAnalyzer struct {
+	model  *genai.GenerativeModel
 	logger *zap.Logger
 }
 
-func NewSimpleAIAnalyzer(logger *zap.Logger) *SimpleAIAnalyzer {
-	return &SimpleAIAnalyzer{logger: logger}
+type AIResponse struct {
+	Priority string `json:"priority"`
+	Category string `json:"category"`
 }
 
-// AnalyzeBug analyzes bug title and description to assign priority and category
-func (a *SimpleAIAnalyzer) AnalyzeBug(ctx context.Context, title, description string) (priority, category string, err error) {
-	combined := strings.ToLower(title + " " + description)
+func NewGeminiAnalyzer(logger *zap.Logger) (*GeminiAnalyzer, error) {
+    apiKey := os.Getenv("GEMINI_KEY")
+    ctx := context.Background()
 
-	// Simple heuristic-based priority assignment
-	priority = "MEDIUM"
+    client, err := genai.NewClient(ctx, option.WithAPIKey(apiKey))
+    if err != nil {
+        return nil, err
+    }
 
-	criticalKeywords := []string{"crash", "fatal", "critical", "urgent", "broken", "cannot", "unable"}
-	for _, keyword := range criticalKeywords {
-		if strings.Contains(combined, keyword) {
-			priority = "HIGH"
-			break
-		}
+    model := client.GenerativeModel("gemini-3-flash-preview") // Fixed name
+    
+    // Force the model to output valid JSON
+    model.ResponseMIMEType = "application/json"
+
+    return &GeminiAnalyzer{
+        model:  model,
+        logger: logger,
+    }, nil
+}
+
+func (a *GeminiAnalyzer) AnalyzeBug(
+	ctx context.Context,
+	title string,
+	description string,
+) (string, string, error) {
+
+	ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
+	defer cancel()
+
+	prompt := `
+You are a bug triage AI.
+
+Analyze the following software bug and return ONLY valid JSON.
+
+Allowed values:
+
+priority: LOW | MEDIUM | HIGH
+category: API | Database | UI | Performance | Security | Other
+
+Return format:
+
+{
+ "priority": "HIGH",
+ "category": "Database"
+}
+
+Bug Title: ` + title + `
+Bug Description: ` + description
+
+	resp, err := a.model.GenerateContent(ctx, genai.Text(prompt))
+	if err != nil {
+		a.logger.Error("gemini request failed", zap.Error(err))
+		return "", "", err
 	}
 
-	minorKeywords := []string{"typo", "formatting", "minor", "cosmetic", "ui"}
-	for _, keyword := range minorKeywords {
-		if strings.Contains(combined, keyword) {
-			priority = "LOW"
-			break
-		}
+	if len(resp.Candidates) == 0 {
+		return "", "", errors.New("empty response from gemini")
+	}
+    
+	content := resp.Candidates[0].Content.Parts[0].(genai.Text)
+
+	text := string(content)
+
+	start := strings.Index(text, "{")
+	end := strings.LastIndex(text, "}")
+
+	if start == -1 || end == -1 {
+		return "", "", errors.New("invalid JSON response from AI")
 	}
 
-	// Simple category assignment
-	categories := []string{"API", "Database", "UI", "Performance", "Security", "Other"}
-	category = categories[rand.Intn(len(categories))]
+	cleanJSON := text[start : end+1]
 
-	if strings.Contains(combined, "database") || strings.Contains(combined, "query") {
-		category = "Database"
-	} else if strings.Contains(combined, "api") || strings.Contains(combined, "endpoint") {
-		category = "API"
-	} else if strings.Contains(combined, "ui") || strings.Contains(combined, "button") || strings.Contains(combined, "display") {
-		category = "UI"
-	} else if strings.Contains(combined, "slow") || strings.Contains(combined, "performance") || strings.Contains(combined, "timeout") {
-		category = "Performance"
-	} else if strings.Contains(combined, "security") || strings.Contains(combined, "password") || strings.Contains(combined, "token") {
-		category = "Security"
+	var result AIResponse
+
+	err = json.Unmarshal([]byte(cleanJSON), &result)
+	if err != nil {
+		a.logger.Error("failed to parse AI response", zap.Error(err))
+		return "", "", err
 	}
-
-	a.logger.Debug("bug analyzed",
-		zap.String("priority", priority),
-		zap.String("category", category),
+    
+	fmt.Println("This is response ", result)
+	a.logger.Debug(
+		"bug analyzed using AI",
+		zap.String("priority", result.Priority),
+		zap.String("category", result.Category),
 	)
 
-	return priority, category, nil
+	return result.Priority, result.Category, nil
 }

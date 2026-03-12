@@ -1,4 +1,4 @@
-package err
+package errortype
 
 import "errors"
 

@@ -50,7 +50,7 @@ type BugResponse struct {
 	Priority    string `json:"priority"`
 	Category    string `json:"category"`
 	ReporterID  int64  `json:"reporter_id"`
-	CreatedAt   string `json:"created_at,omitempty"`
+	CreatedAt   string `json:"created_at,omitempty"` //If this variable is empty/zero, just leave it out of the final JSON result
 }
 
 // BugsListResponse represents a paginated list of bugs

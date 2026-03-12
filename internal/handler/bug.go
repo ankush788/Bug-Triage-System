@@ -6,7 +6,7 @@ import (
 	"strconv"
 
 	"bug_triage/internal/dto"
-	errortype "bug_triage/internal/err"
+	errortype "bug_triage/internal/error"
 	"bug_triage/internal/middleware"
 	"bug_triage/internal/service"
 

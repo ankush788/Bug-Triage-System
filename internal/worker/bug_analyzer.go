@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	errortype "bug_triage/internal/err"
+	errortype "bug_triage/internal/error"
 	"bug_triage/internal/kafka"
 	"bug_triage/internal/repository"
 
