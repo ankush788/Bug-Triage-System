@@ -39,6 +39,7 @@ tmp/
 # Build output
 bin/
 dist/
+*.txt
 
 # Log files
 *.log

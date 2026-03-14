@@ -22,7 +22,7 @@ type BugAnalyzer struct {
 
 // AIAnalyzer simulates AI bug classification
 type AIAnalyzer interface {
-	AnalyzeBug(ctx context.Context, title, description string) (priority, category string, err error)
+	AnalyzeBug(logger *zap.Logger, ctx context.Context, title, description string) (priority, category string, err error)
 }
 
 func NewBugAnalyzer(
@@ -52,7 +52,7 @@ func (ba *BugAnalyzer) Start(ctx context.Context) error {
 		}
 
 		// Perform AI analysis
-		priority, category, err := ba.aiAnalyzer.AnalyzeBug(ctx, event.Title, event.Description)
+		priority, category, err := ba.aiAnalyzer.AnalyzeBug(ba.logger,  ctx, event.Title, event.Description)
 		if err != nil {
 			ba.logger.Error("ai analysis failed", zap.Error(err), zap.Int64("bug_id", event.BugID))
 			return err
@@ -75,17 +75,7 @@ func (ba *BugAnalyzer) Start(ctx context.Context) error {
 			return err
 		}
 
-		// Publish bug_analyzed event
-		analyzedEvent := &kafka.BugAnalyzedEvent{
-			BugID:    event.BugID,
-			Priority: priority,
-			Category: category,
-		}
-
-		if err := ba.producer.PublishBugAnalyzedEvent(ctx, analyzedEvent); err != nil {
-			ba.logger.Error("failed to publish bug_analyzed event", zap.Error(err))
-			// Don't return error here - analysis was successful, just notification failed
-		}
+		
 
 		return nil
 	}

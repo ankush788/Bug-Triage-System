@@ -5,7 +5,6 @@ import "encoding/json"
 // Event types
 const (
 	EventBugCreated  = "bug_created"
-	EventBugAnalyzed = "bug_analyzed"
 )
 
 // BugCreatedEvent published when a new bug is created

@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS bugs (
     created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+
 -- Create index on reporter_id for faster lookups
 CREATE INDEX IF NOT EXISTS idx_bugs_reporter_id ON bugs(reporter_id);
 
@@ -29,3 +30,5 @@ CREATE INDEX IF NOT EXISTS idx_bugs_status ON bugs(status);
 
 -- Create index on priority for filtering
 CREATE INDEX IF NOT EXISTS idx_bugs_priority ON bugs(priority);
+
+

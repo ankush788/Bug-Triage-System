@@ -10,7 +10,8 @@ services:
       - redis-data:/data
 
   postgres:
-    image: postgres:15-alpine
+    # pgvector extension adds vector data support inside PostgreSQL. ex : A vector type to store embeddings (list of numbers).
+    image: pgvector/pgvector:pg15
     container_name: bug_triage_postgres
     ports:
       - "5432:5432"

@@ -6,6 +6,7 @@ import (
 	"bug_triage/internal/database"
 	"bug_triage/internal/kafka"
 	"bug_triage/internal/repository"
+
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
@@ -40,10 +41,10 @@ func NewWorkerDependencies(cfg *config.Config, log *zap.Logger) (*WorkerDependen
 		log,
 	)
 
-	// Initialize AI analyzer
-	aiAnalyzer ,err  := aianalyzer.NewGeminiAnalyzer(log)
+	// Initialize AI analyzer using the GORM DB directly.
+	aiAnalyzer, err := aianalyzer.NewGeminiAnalyzer(log, db)
 	if err != nil {
-		 return nil , err
+		return nil, err
 	}
 
 	return &WorkerDependencies{

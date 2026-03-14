@@ -66,7 +66,7 @@ func main() {
 
 workerErrors := make(chan error, 1)
 
-// Start worker in background (remain main thread free to process shutdown)
+// Start worker in background (remain main thread free to process shutdown)  --> which use kakfa
 go func() {
 	if err := bugAnalyzer.Start(context.Background()); err != nil {
 		workerErrors <- err

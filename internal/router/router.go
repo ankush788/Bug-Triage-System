@@ -5,7 +5,6 @@ import (
 	"bug_triage/internal/handler"
 	"bug_triage/internal/middleware"
 	"bug_triage/internal/pkg"
-	"fmt"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
@@ -20,8 +19,7 @@ func SetupRouter(
 	log *zap.Logger,
 ) *gin.Engine {
 	router := gin.Default()
-   log.Info("it is prsent 1")
-   fmt.Println("this is the end")
+
 	// Health check (no auth required) 
 	// (it is private api so, public will not access it) --> no threat of ddos attack
 	
