@@ -19,6 +19,9 @@ func Run(dbURL string, log *zap.Logger) error {
 		return err
 	}
 
+
+	// schema table ke version ko check karta hai and uske aage ke version ko  run karta hai 
+	// (if version "1" present in table then start running migration file from "2" and so on)
 	if err := m.Up(); err != nil && err != migrate.ErrNoChange { // run all pending up migrations
 
 	// if err := m.Down(); err != nil && err != migrate.ErrNoChange { for downgrade we have to use this 

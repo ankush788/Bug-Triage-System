@@ -1,16 +1,17 @@
 package main
 
 import (
-	"os"
-	"os/signal"
-	"syscall"
-
 	"bug_triage/internal/appdependency"
 	"bug_triage/internal/config"
 	"bug_triage/internal/logger"
 	"bug_triage/internal/migration"
 	"bug_triage/internal/router"
+	"os"
+	"os/signal"
+	"syscall"
 
+	"github.com/gin-gonic/gin"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 )
 
@@ -50,6 +51,8 @@ func main() {
 		deps.RateLimiter,
 		log,
 	)
+	
+	httpRouter.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	log.Info("server starting", zap.String("port", cfg.Port))
 

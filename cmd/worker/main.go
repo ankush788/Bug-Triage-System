@@ -16,14 +16,14 @@ import (
 )
 
 // Bug Analyzer Worker
-// This is a standalone service that consumes bug_created events from Kafka,
-// performs AI analysis, and publishes bug_analyzed events.
+// This is a standalone process  that consumes bug_created events from Kafka ,performs AI analysis assign priority and category
+
+// note : PORT is use when  interact with the external world directly needed. that why :-
+// The API server (proces) runs on a port .The worker runs as a background process.
 
 // Reason to run on seperate server
 //Independent scaling: API server handles user requests while workers process Kafka jobs. so, both can scale independently and seperatly based on their requirment
 //Fault isolation: If the worker crashes or heavy processing occurs, the API server continues serving requests without downtime.
-//Industry microservice pattern: Background jobs (event consumers) are usually deployed as separate services from the main API is industry trend
-
 
 
 func main() {

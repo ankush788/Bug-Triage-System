@@ -10,14 +10,10 @@ services:
       - redis-data:/data
 
   postgres:
-    # pgvector extension adds vector data support inside PostgreSQL. ex : A vector type to store embeddings (list of numbers).
     image: pgvector/pgvector:pg15
     container_name: bug_triage_postgres
     ports:
       - "5432:5432"
-    # Credentials are picked up from the .env file or
-    # from the shell environment. Create a .env at the
-    # project root with keys shown below.
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -31,8 +27,6 @@ services:
     ports:
       - "9092:9092"
       - "9093:9093"
-    # Values for Kafka are expected in the .env file or
-    # as normal environment variables when starting compose.
     environment:
       CLUSTER_ID: ${KAFKA_CLUSTER_ID}
       KAFKA_PROCESS_ROLES: "broker,controller"
@@ -47,7 +41,24 @@ services:
     volumes:
       - kafka-data:/var/lib/kafka/data
 
+  prometheus:
+    image: prom/prometheus
+    container_name: bug_triage_prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml
+
+  grafana:
+    image: grafana/grafana
+    container_name: bug_triage_grafana
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-data:/var/lib/grafana
+
 volumes:
   redis-data:
   postgres-data:
   kafka-data:
+  grafana-data:

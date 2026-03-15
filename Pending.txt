@@ -1,5 +1,2 @@
-RAG (working)
-docker (basic)
-context (basic work)
-migration (wokring)
+mcp
 performance testing & test
