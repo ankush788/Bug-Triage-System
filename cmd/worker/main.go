@@ -9,6 +9,7 @@ import (
 	"bug_triage/internal/appdependency"
 	"bug_triage/internal/config"
 	"bug_triage/internal/logger"
+	"bug_triage/internal/metrics"
 	"bug_triage/internal/migration"
 	"bug_triage/internal/worker"
 
@@ -30,6 +31,9 @@ func main() {
 	// Initialize logger
 	logger.Init()
 	defer logger.Sync()
+
+	// Initialize Prometheus metrics
+	metrics.Init()
 
 	log := logger.Log
 

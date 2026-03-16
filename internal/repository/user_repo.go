@@ -3,8 +3,10 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	errortype "bug_triage/internal/error"
+	"bug_triage/internal/metrics"
 	"bug_triage/internal/models"
 
 	"gorm.io/gorm"
@@ -32,12 +34,23 @@ func NewPostgresUserRepo(db *gorm.DB) *PostgresUserRepo {
 }
 
 func (r *PostgresUserRepo) Create(ctx context.Context, u *models.User) error {
-	return r.db.WithContext(ctx).Create(u).Error
+	start := time.Now()
+	err := r.db.WithContext(ctx).Create(u).Error
+	duration := time.Since(start).Seconds()
+
+	metrics.DBQueryDuration.WithLabelValues("insert", "users").Observe(duration)
+
+	return err
 }
 
 func (r *PostgresUserRepo) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	start := time.Now()
 	var u models.User
 	err := r.db.WithContext(ctx).Where("email = ?", email).First(&u).Error
+	duration := time.Since(start).Seconds()
+
+	metrics.DBQueryDuration.WithLabelValues("select", "users").Observe(duration)
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errortype.ErrNotFound
 	}
@@ -45,8 +58,12 @@ func (r *PostgresUserRepo) GetByEmail(ctx context.Context, email string) (*model
 }
 
 func (r *PostgresUserRepo) GetByID(ctx context.Context, id int64) (*models.User, error) {
+	start := time.Now()
 	var u models.User
 	err := r.db.WithContext(ctx).First(&u, id).Error
+	duration := time.Since(start).Seconds()
+
+	metrics.DBQueryDuration.WithLabelValues("select", "users").Observe(duration)
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errortype.ErrNotFound
 	}

@@ -3,8 +3,10 @@ package repository
 import (
 	"context"
 	"errors"
+	"time"
 
 	errortype "bug_triage/internal/error"
+	"bug_triage/internal/metrics"
 	"bug_triage/internal/models"
 
 	"gorm.io/gorm"
@@ -40,12 +42,23 @@ func NewPostgresBugRepo(db *gorm.DB) *PostgresBugRepo {
 }
 
 func (r *PostgresBugRepo) Create(ctx context.Context, b *models.Bug) error {
-	return r.db.WithContext(ctx).Create(b).Error
+	start := time.Now()
+	err := r.db.WithContext(ctx).Create(b).Error
+	duration := time.Since(start).Seconds()
+
+	metrics.DBQueryDuration.WithLabelValues("insert", "bugs").Observe(duration)
+
+	return err
 }
 
 func (r *PostgresBugRepo) GetByID(ctx context.Context, id int64) (*models.Bug, error) {
+	start := time.Now()
 	var b models.Bug
 	err := r.db.WithContext(ctx).First(&b, id).Error
+	duration := time.Since(start).Seconds()
+
+	metrics.DBQueryDuration.WithLabelValues("select", "bugs").Observe(duration)
+
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, errortype.ErrNotFound
 	}
@@ -53,13 +66,23 @@ func (r *PostgresBugRepo) GetByID(ctx context.Context, id int64) (*models.Bug, e
 }
 
 func (r *PostgresBugRepo) List(ctx context.Context, limit, offset int) ([]*models.Bug, error) {
+	start := time.Now()
 	var bugs []*models.Bug
 	err := r.db.WithContext(ctx).Order("created_at DESC").Limit(limit).Offset(offset).Find(&bugs).Error
+	duration := time.Since(start).Seconds()
+
+	metrics.DBQueryDuration.WithLabelValues("select", "bugs").Observe(duration)
+
 	return bugs, err
 }
 
 func (r *PostgresBugRepo) UpdateStatus(ctx context.Context, id int64, status string) error {
+	start := time.Now()
 	res := r.db.WithContext(ctx).Model(&models.Bug{}).Where("id = ?", id).Update("status", status)
+	duration := time.Since(start).Seconds()
+
+	metrics.DBQueryDuration.WithLabelValues("update", "bugs").Observe(duration)
+
 	if res.Error != nil {
 		return res.Error
 	}
@@ -70,10 +93,15 @@ func (r *PostgresBugRepo) UpdateStatus(ctx context.Context, id int64, status str
 }
 
 func (r *PostgresBugRepo) UpdateAnalysis(ctx context.Context, id int64, priority, category string) error {
+	start := time.Now()
 	res := r.db.WithContext(ctx).Model(&models.Bug{}).Where("id = ?", id).Updates(map[string]interface{}{
 		"priority": priority,
 		"category": category,
 	})
+	duration := time.Since(start).Seconds()
+
+	metrics.DBQueryDuration.WithLabelValues("update", "bugs").Observe(duration)
+
 	if res.Error != nil {
 		return res.Error
 	}

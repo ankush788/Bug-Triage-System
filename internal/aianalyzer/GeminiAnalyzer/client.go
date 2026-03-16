@@ -1,4 +1,4 @@
-package aianalyzer
+package geminianalyzer
 
 import (
 	"context"
@@ -24,7 +24,7 @@ type GeminiAnalyzer struct {
 // *gorm.DB must be supplied.
 // The GEMINI_KEY environment variable is used to authenticate the AI
 // client.
-func NewGeminiAnalyzer(logger *zap.Logger, db *gorm.DB) (*GeminiAnalyzer, error) {
+func NewGeminiAnalyzer(logger *zap.Logger, db *gorm.DB) (Analyzer, error) {
     // apiKey := os.Getenv("GEMINI_KEY")
     apiKey := os.Getenv("GEMINI_KEY1")
     geminiModel := os.Getenv("GEMINI_MODEL")

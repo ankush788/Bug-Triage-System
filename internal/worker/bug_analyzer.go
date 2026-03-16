@@ -3,9 +3,12 @@ package worker
 import (
 	"context"
 	"errors"
+	"time"
 
+	"bug_triage/internal/aianalyzer/geminianalyzer"
 	errortype "bug_triage/internal/error"
 	"bug_triage/internal/kafka"
+	"bug_triage/internal/metrics"
 	"bug_triage/internal/repository"
 
 	"go.uber.org/zap"
@@ -16,20 +19,15 @@ type BugAnalyzer struct {
 	consumer   *kafka.Consumer
 	bugRepo    repository.BugRepository
 	producer   *kafka.Producer
-	aiAnalyzer AIAnalyzer
+	aiAnalyzer geminianalyzer.Analyzer
 	logger     *zap.Logger
-}
-
-// AIAnalyzer simulates AI bug classification
-type AIAnalyzer interface {
-	AnalyzeBug(logger *zap.Logger, ctx context.Context, title, description string) (priority, category string, err error)
 }
 
 func NewBugAnalyzer(
 	consumer *kafka.Consumer,
 	bugRepo repository.BugRepository,
 	producer *kafka.Producer,
-	aiAnalyzer AIAnalyzer,
+	aiAnalyzer geminianalyzer.Analyzer,
 	logger *zap.Logger,
 ) *BugAnalyzer {
 	return &BugAnalyzer{
@@ -52,7 +50,11 @@ func (ba *BugAnalyzer) Start(ctx context.Context) error {
 		}
 
 		// Perform AI analysis
-		priority, category, err := ba.aiAnalyzer.AnalyzeBug(ba.logger,  ctx, event.Title, event.Description)
+		start := time.Now()
+		priority, category, err := ba.aiAnalyzer.AnalyzeBug(ba.logger, ctx, event.Title, event.Description)
+		duration := time.Since(start).Seconds()
+		metrics.AILatency.Observe(duration)
+
 		if err != nil {
 			ba.logger.Error("ai analysis failed", zap.Error(err), zap.Int64("bug_id", event.BugID))
 			return err
@@ -74,8 +76,6 @@ func (ba *BugAnalyzer) Start(ctx context.Context) error {
 			ba.logger.Error("failed to update bug analysis", zap.Error(err))
 			return err
 		}
-
-		
 
 		return nil
 	}

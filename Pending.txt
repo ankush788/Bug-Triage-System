@@ -1,2 +1,3 @@
-mcp
-performance testing & test
+performance testing (k6 tool)
+test about : edge case of api & ( if kafka) / redis of 
+mcp 

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"bug_triage/internal/metrics"
 	"bug_triage/internal/models"
 
 	"github.com/redis/go-redis/v9"
@@ -31,6 +32,9 @@ func (c *BugCache) Get(ctx context.Context, bugID int64) (*models.Bug, error) {
    
 	cached, err := c.redis.Get(ctx, key).Result()
 	if err != nil {
+		if err == redis.Nil {
+			metrics.RedisCacheMisses.Inc()
+		}
 		return nil, err // Return error to indicate not found or connection issue
 	}
 

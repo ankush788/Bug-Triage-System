@@ -4,6 +4,7 @@ import (
 	"bug_triage/internal/appdependency"
 	"bug_triage/internal/config"
 	"bug_triage/internal/logger"
+	"bug_triage/internal/metrics"
 	"bug_triage/internal/migration"
 	"bug_triage/internal/router"
 	"os"
@@ -36,6 +37,9 @@ func main() {
 		log.Fatal("database migration failed", zap.Error(err))
 	}
 
+	// Initialize Prometheus metrics
+	metrics.Init()
+
 	// Initialize all dependencies
 	deps, err := appdependency.NewAppDependencies(cfg, log)
 	if err != nil {
@@ -51,7 +55,7 @@ func main() {
 		deps.RateLimiter,
 		log,
 	)
-	
+
 	httpRouter.GET("/metrics", gin.WrapH(promhttp.Handler()))
 
 	log.Info("server starting", zap.String("port", cfg.Port))

@@ -1,7 +1,7 @@
 package appdependency
 
 import (
-	"bug_triage/internal/aianalyzer"
+	"bug_triage/internal/aianalyzer/geminianalyzer"
 	"bug_triage/internal/config"
 	"bug_triage/internal/database"
 	"bug_triage/internal/kafka"
@@ -17,7 +17,7 @@ type WorkerDependencies struct {
 	BugRepo       repository.BugRepository
 	KafkaProducer *kafka.Producer
 	KafkaConsumer *kafka.Consumer
-	AIAnalyzer    *aianalyzer.GeminiAnalyzer
+	AIAnalyzer    geminianalyzer.Analyzer
 	Logger        *zap.Logger
 }
 
@@ -42,7 +42,7 @@ func NewWorkerDependencies(cfg *config.Config, log *zap.Logger) (*WorkerDependen
 	)
 
 	// Initialize AI analyzer using the GORM DB directly.
-	aiAnalyzer, err := aianalyzer.NewGeminiAnalyzer(log, db)
+	aiAnalyzer, err := geminianalyzer.NewGeminiAnalyzer(log, db)
 	if err != nil {
 		return nil, err
 	}

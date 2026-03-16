@@ -1,4 +1,4 @@
-package aianalyzer
+package geminianalyzer
 
 import (
 	"context"

@@ -20,6 +20,9 @@ func SetupRouter(
 ) *gin.Engine {
 	router := gin.Default()
 
+	// Instrument requests for Prometheus
+	router.Use(middleware.MetricsMiddleware())
+
 	// Health check (no auth required) 
 	// (it is private api so, public will not access it) --> no threat of ddos attack
 	
