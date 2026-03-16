@@ -14,7 +14,7 @@ import (
 // historical_bugs table and returns a back‑quoted list of the top
 // examples.  It is intentionally unexported; callers should use it via
 // AnalyzeBug.
-func (a *GeminiAnalyzer) getContext(logger *zap.Logger, ctx context.Context, title, description string) (string, error) {
+func (a *GeminiAnalyzer) GetContext(logger *zap.Logger, ctx context.Context, title, description string) (string, error) {
     logger.Debug("Fetching historical context", zap.String("title", title), zap.String("description", description))
     res, err := a.embed.EmbedContent(ctx, genai.Text(title+" "+description))
     if err != nil {

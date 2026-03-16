@@ -1,6 +1,7 @@
 package appdependency
 
 import (
+	"bug_triage/internal/aianalyzer"
 	"bug_triage/internal/aianalyzer/geminianalyzer"
 	"bug_triage/internal/config"
 	"bug_triage/internal/database"
@@ -17,7 +18,7 @@ type WorkerDependencies struct {
 	BugRepo       repository.BugRepository
 	KafkaProducer *kafka.Producer
 	KafkaConsumer *kafka.Consumer
-	AIAnalyzer    geminianalyzer.Analyzer
+	AIAnalyzer    aianalyzer.Analyzer
 	Logger        *zap.Logger
 }
 

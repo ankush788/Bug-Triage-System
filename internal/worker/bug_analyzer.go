@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"bug_triage/internal/aianalyzer/geminianalyzer"
+	"bug_triage/internal/aianalyzer"
 	errortype "bug_triage/internal/error"
 	"bug_triage/internal/kafka"
 	"bug_triage/internal/metrics"
@@ -19,7 +19,7 @@ type BugAnalyzer struct {
 	consumer   *kafka.Consumer
 	bugRepo    repository.BugRepository
 	producer   *kafka.Producer
-	aiAnalyzer geminianalyzer.Analyzer
+	aiAnalyzer aianalyzer.Analyzer
 	logger     *zap.Logger
 }
 
@@ -27,7 +27,7 @@ func NewBugAnalyzer(
 	consumer *kafka.Consumer,
 	bugRepo repository.BugRepository,
 	producer *kafka.Producer,
-	aiAnalyzer geminianalyzer.Analyzer,
+	aiAnalyzer aianalyzer.Analyzer,
 	logger *zap.Logger,
 ) *BugAnalyzer {
 	return &BugAnalyzer{

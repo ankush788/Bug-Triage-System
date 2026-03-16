@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"bug_triage/internal/aianalyzer"
+
 	"github.com/google/generative-ai-go/genai"
 	"go.uber.org/zap"
 )
@@ -16,7 +18,7 @@ func (a *GeminiAnalyzer) AnalyzeBug(logger *zap.Logger, ctx context.Context, tit
     ctx, cancel := context.WithTimeout(ctx, 30*time.Second)
     defer cancel()
 
-    pastContext, err := a.getContext(logger ,ctx, title, description)
+    pastContext, err := a.GetContext(logger ,ctx, title, description)
     // default prompt (for  trying better search results when prompt is empty)
     if err != nil || pastContext == "" {
         pastContext = "No historical examples available. Classify based on bug severity and type."
@@ -45,7 +47,7 @@ Return ONLY JSON: {"priority": "...", "category": "..."}
     }
 
     content := resp.Candidates[0].Content.Parts[0].(genai.Text)
-    var result AIResponse
+    var result aianalyzer.AIResponse
     if err := json.Unmarshal([]byte(string(content)), &result); err != nil {
         return "", "", err
     }

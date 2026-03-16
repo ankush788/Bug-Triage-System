@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 
+	"bug_triage/internal/aianalyzer"
+
 	"github.com/google/generative-ai-go/genai"
 	"go.uber.org/zap"
 	"google.golang.org/api/option"
@@ -24,7 +26,7 @@ type GeminiAnalyzer struct {
 // *gorm.DB must be supplied.
 // The GEMINI_KEY environment variable is used to authenticate the AI
 // client.
-func NewGeminiAnalyzer(logger *zap.Logger, db *gorm.DB) (Analyzer, error) {
+func NewGeminiAnalyzer(logger *zap.Logger, db *gorm.DB) (aianalyzer.Analyzer, error) {
     // apiKey := os.Getenv("GEMINI_KEY")
     apiKey := os.Getenv("GEMINI_KEY1")
     geminiModel := os.Getenv("GEMINI_MODEL")
