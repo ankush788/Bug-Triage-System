@@ -44,7 +44,7 @@ func (c *UserCache) Get(ctx context.Context, email string) (*models.User, error)
 // Set stores a user in cache
 func (c *UserCache) Set(ctx context.Context, email string, user *models.User) error {
 	key := fmt.Sprintf("user:%s", email)
-	ttl := 1 * time.Second // Cache for 1 hour
+	ttl := 1 * time.Hour // Cache for 1 hour
 	data, err := json.Marshal(user)
 	if err != nil {
 		return err
